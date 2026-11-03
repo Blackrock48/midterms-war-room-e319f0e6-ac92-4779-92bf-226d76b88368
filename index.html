@@ -133,6 +133,22 @@ h2 .sub { font-family: var(--font-body); font-weight: 400; text-transform: none;
 @media (prefers-reduced-motion: no-preference) { .skel { animation: sh 1.4s infinite; } }
 @keyframes sh { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+/* changes layer */
+.tag-live { font-family: var(--font-mono); font-size: .68rem; padding: .15rem .5rem; border-radius: 3px; letter-spacing: .08em; background: var(--bad); color: #fff; }
+.changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: .8rem; }
+.chglist { list-style: none; margin: 0; padding: 0; font-size: .82rem; }
+.chglist li { padding: .4rem 0; border-top: 1px solid var(--line); display: flex; gap: .6rem; align-items: baseline; }
+.chglist li:first-child { border-top: 0; }
+.chglist .mv { font-family: var(--font-mono); font-weight: 600; min-width: 3.4rem; text-align: right; white-space: nowrap; }
+.chglist .mv.up { color: var(--dem); } .chglist .mv.down { color: var(--rep); } .chglist .mv.flat { color: var(--muted); }
+.chglist .what { min-width: 0; }
+.chglist .what small { color: var(--muted); font-family: var(--font-mono); font-size: .68rem; display: block; }
+.chglist li.hi { background: color-mix(in srgb, var(--toss) 12%, transparent); margin: 0 -.4rem; padding-left: .4rem; padding-right: .4rem; border-radius: 3px; }
+.tile .spark { height: 2rem; margin-top: .5rem; }
+.tile .spark svg { width: 100%; height: 100%; display: block; }
+.tile .since { font-family: var(--font-mono); font-size: .7rem; color: var(--muted); margin-top: .2rem; min-height: 1em; }
+.race .mv { font-family: var(--font-mono); font-size: .68rem; }
+.race .mv.up { color: var(--dem); } .race .mv.down { color: var(--rep); }
 /* tabs + projections view */
 .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
 .tab { border: 0; background: transparent; padding: .35rem .8rem; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .05em; font-size: .75rem; font-weight: 700; cursor: pointer; color: var(--muted); }
@@ -242,10 +258,22 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
 
 <div class="wrap" id="view-live">
   <div class="tiles" id="tiles">
-    <div class="panel tile" id="tile-senate"><div class="k">Senate control · Polymarket</div><div class="v"><span class="dem-pct">—</span><small>Dem</small><span class="delta"></span></div><div class="meter"><i style="width:50%"></i></div><div class="row"><span>Democrats</span><span>Republicans</span></div></div>
-    <div class="panel tile" id="tile-house"><div class="k">House control · Polymarket</div><div class="v"><span class="dem-pct">—</span><small>Dem</small><span class="delta"></span></div><div class="meter"><i style="width:50%"></i></div><div class="row"><span>Democrats</span><span>Republicans</span></div></div>
+    <div class="panel tile" id="tile-senate"><div class="k">Senate control · Polymarket</div><div class="v"><span class="dem-pct">—</span><small>Dem</small><span class="delta"></span></div><div class="meter"><i style="width:50%"></i></div><div class="row"><span>Democrats</span><span>Republicans</span></div><div class="spark" data-key="senate"></div><div class="since"></div></div>
+    <div class="panel tile" id="tile-house"><div class="k">House control · Polymarket</div><div class="v"><span class="dem-pct">—</span><small>Dem</small><span class="delta"></span></div><div class="meter"><i style="width:50%"></i></div><div class="row"><span>Democrats</span><span>Republicans</span></div><div class="spark" data-key="house"></div><div class="since"></div></div>
     <div class="panel tile" id="tile-count"><div class="k">Election day</div><div class="v"><span id="days">—</span><small id="daysLabel">days</small></div><div class="row"><span>Tue 3 Nov 2026</span><span>polls close from 7pm ET</span></div></div>
     <div class="panel tile" id="tile-hot"><div class="k">Closest race right now</div><div class="v" style="font-size:1.6rem"><span id="hotState">—</span></div><div class="row"><span id="hotDetail">waiting for markets…</span></div></div>
+  </div>
+
+  <h2><span class="tag-live">Live</span> What changed <span class="sub" id="chgSub">Compared with the previous refresh and with the election-eve baseline.</span></h2>
+  <div class="changes">
+    <div class="panel">
+      <h3 class="ph">Since the previous refresh <span id="chgPrevAt">first load</span></h3>
+      <ul class="chglist" id="chgPrev"><li class="empty">Waiting for a second refresh to compare against.</li></ul>
+    </div>
+    <div class="panel">
+      <h3 class="ph">Since election eve <span>baseline: final market odds, 2 Nov</span></h3>
+      <ul class="chglist" id="chgBase"><li class="empty">Loading markets…</li></ul>
+    </div>
   </div>
 
   <div class="primer">
@@ -671,6 +699,7 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
       .filter((i) => /project|call|wins|elected|flips|holds|declare|concede/i.test(i.title))
       .map((i) => { const r = RACES.find((r) => i.title.includes(r.name) || i.title.includes(r.dem) || i.title.includes(r.rep)); return r ? { ...i, tag: r.st } : i; })
       .sort((a, b) => new Date(b.date) - new Date(a.date));
+    state.cur.calls = items.map((i) => i.title);
     renderList(ul, items.slice(0, 30), 'news');
   }
 
@@ -756,7 +785,10 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
         const closeness = Math.abs(m.p - .5);
         if (!hottest || closeness < hottest.c) hottest = { r, m, c: closeness };
         const meter = el('div', 'meter'); const i = el('i'); i.style.width = pct(m.p) + '%'; meter.appendChild(i); c.appendChild(meter);
-        const p = el('div', 'pct'); p.appendChild(el('span', null, pct(m.p) + '%')); p.appendChild(el('span', null, pct(1 - m.p) + '%')); c.appendChild(p);
+        const p = el('div', 'pct'); p.appendChild(el('span', null, pct(m.p) + '%'));
+        const pv = state.prev && state.prev.markets ? state.prev.markets[r.st] : null;
+        if (pv != null) { const d = pct(m.p) - pct(pv); p.appendChild(el('span', 'mv ' + (d > 0 ? 'up' : d < 0 ? 'down' : ''), d === 0 ? '± 0 since last' : (d > 0 ? '▲ +' : '▼ ') + d + ' since last')); }
+        p.appendChild(el('span', null, pct(1 - m.p) + '%')); c.appendChild(p);
         let heat;
         if (w) { heat = el('span', 'heat called', (w.who === 'R' ? r.rep : r.dem).toUpperCase() + (w.how === 'call' ? ' ✓' : ' · MKT')); heat.style.color = partyColor(w.who); }
         else {
@@ -843,6 +875,7 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
     const results = await Promise.allSettled(qs.map((q) => fetchRSS(gnews(q))));
     const items = dedupe(results.flatMap((x) => x.status === 'fulfilled' ? x.value : [])).sort((a, b) => new Date(b.date) - new Date(a.date));
     if (results.every((x) => x.status === 'rejected')) throw results[0].reason;
+    if (!r && !houseMode()) state.cur.news = items.map((i) => i.title);
     renderList(ul, items, 'news');
   }
   async function loadPollNews() {
@@ -890,6 +923,85 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
     runFeeds();
   }
 
+  // ---------- change tracking ----------
+  // election-eve baseline: final market odds (Kalshi 2 Nov; 15 Oct Kalshi where no final figure was published)
+  const BASELINE = { senate: 74, house: 94, races: { TX: 75, OH: 71, ME: 73, IA: 52, KS: 63, MI: 78, SC: 33, AK: 75, NE: 35, NC: 88, GA: 80, NH: 78, MN: 85 } };
+  const loadJSON = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const saveJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  state.prev = loadJSON('mwr.last', null);
+  state.history = loadJSON('mwr.history', []);
+  state.cur = { news: [], calls: [] };
+  const snapshot = () => ({
+    at: Date.now(),
+    control: { senate: state.control.senate && state.control.senate.p, house: state.control.house && state.control.house.p },
+    markets: Object.fromEntries(RACES.map((r) => [r.st, state.markets[r.st] ? state.markets[r.st].p : null])),
+    winners: Object.fromEntries(RACES.map((r) => { const w = winner(r); return [r.st, w ? w.who : null]; })),
+    news: state.cur.news.slice(0, 60), calls: state.cur.calls.slice(0, 40),
+  });
+  const fmtT = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const mvSpan = (d, suffix) => { const s = el('span', 'mv ' + (d > 0 ? 'up' : d < 0 ? 'down' : 'flat'), (d > 0 ? '▲ +' : d < 0 ? '▼ ' : '± ') + d + (suffix || ' pt')); return s; };
+  const chgItem = (ul, d, text, sub, hi) => { const li = el('li', hi ? 'hi' : ''); li.appendChild(typeof d === 'number' ? mvSpan(d) : el('span', 'mv flat', d)); const w = el('div', 'what', text); if (sub) w.appendChild(el('small', null, sub)); li.appendChild(w); ul.appendChild(li); };
+  function renderChanges() {
+    const ul = $('#chgPrev'); ul.replaceChildren();
+    const prev = state.prev;
+    $('#chgPrevAt').textContent = prev ? 'previous refresh ' + fmtT(prev.at) : 'first load';
+    if (!prev) { ul.appendChild(el('li', 'empty', 'Waiting for a second refresh to compare against.')); }
+    else {
+      let n = 0;
+      for (const k of ['senate', 'house']) {
+        const a = prev.control[k], b = state.control[k] && state.control[k].p;
+        if (a != null && b != null) { const d = pct(b) - pct(a); if (d !== 0) { chgItem(ul, d, (k === 'senate' ? 'Senate' : 'House') + ' control: Democrats ' + pct(a) + '% → ' + pct(b) + '%', null, Math.abs(d) >= 3); n++; } }
+      }
+      for (const r of RACES) {
+        const pw = prev.winners[r.st], w = winner(r);
+        if (w && w.who !== pw) { chgItem(ul, 'CALL', r.name + ' decided: ' + (w.who === 'R' ? r.rep : r.dem) + (w.how === 'call' ? ' (logged call)' : ' (market)'), null, true); n++; continue; }
+        if (!w && pw) { chgItem(ul, 'UNDO', r.name + ' back to undecided', null, true); n++; continue; }
+        const a = prev.markets[r.st], b = state.markets[r.st] && state.markets[r.st].p;
+        if (a != null && b != null) { const d = pct(b) - pct(a); if (d !== 0) { chgItem(ul, d, r.name + ': ' + r.dem + ' ' + pct(a) + '% → ' + pct(b) + '%', null, Math.abs(d) >= 5); n++; } }
+      }
+      const newNews = state.cur.news.filter((t) => !prev.news.includes(t));
+      if (newNews.length) chgItem(ul, newNews.length + ' new', 'headline' + (newNews.length > 1 ? 's' : '') + ' in News', newNews.slice(0, 3).join(' · '));
+      const newCalls = state.cur.calls.filter((t) => !prev.calls.includes(t));
+      if (newCalls.length) chgItem(ul, newCalls.length + ' new', 'item' + (newCalls.length > 1 ? 's' : '') + ' in the race-calls ticker', newCalls.slice(0, 3).join(' · '), true);
+      if (!n && !newNews.length && !newCalls.length) ul.appendChild(el('li', 'empty', 'No movement since ' + fmtT(prev.at) + ' — markets, calls and headlines unchanged.'));
+    }
+    const ub = $('#chgBase'); ub.replaceChildren();
+    let m = 0;
+    for (const k of ['senate', 'house']) { const b = state.control[k] && state.control[k].p; if (b != null) { const d = pct(b) - BASELINE[k]; chgItem(ub, d, (k === 'senate' ? 'Senate' : 'House') + ' control: ' + BASELINE[k] + '% → ' + pct(b) + '%', null, Math.abs(d) >= 5); m++; } }
+    const rows = RACES.map((r) => ({ r, b: BASELINE.races[r.st], p: state.markets[r.st] && state.markets[r.st].p })).filter((o) => o.b != null && o.p != null).map((o) => ({ ...o, d: pct(o.p) - o.b })).sort((a, b) => Math.abs(b.d) - Math.abs(a.d));
+    for (const { r, b, p, d } of rows) { if (Math.abs(d) >= 2) { chgItem(ub, d, r.name + ': ' + r.dem + ' ' + b + '% → ' + pct(p) + '%', winner(r) ? 'decided' : null, Math.abs(d) >= 10); m++; } }
+    if (!m) ub.appendChild(el('li', 'empty', 'No market has moved 2 points or more from the election-eve odds.'));
+    // tiles
+    for (const k of ['senate', 'house']) {
+      const t = $('#tile-' + k), s = $('.since', t); const b = state.control[k] && state.control[k].p;
+      if (prev && prev.control[k] != null && b != null) { const d = pct(b) - pct(prev.control[k]); s.textContent = (d > 0 ? '▲ +' : d < 0 ? '▼ ' : '± ') + d + ' since ' + fmtT(prev.at) + ' · ' + (pct(b) - BASELINE[k] > 0 ? '+' : '') + (pct(b) - BASELINE[k]) + ' vs election eve'; s.style.color = d > 0 ? 'var(--dem)' : d < 0 ? 'var(--rep)' : 'var(--muted)'; }
+      else if (b != null) s.textContent = (pct(b) - BASELINE[k] > 0 ? '+' : '') + (pct(b) - BASELINE[k]) + ' vs election eve (' + BASELINE[k] + '%)';
+    }
+    renderSparks();
+  }
+  function renderSparks() {
+    for (const box of document.querySelectorAll('.tile .spark')) {
+      const key = box.dataset.key; box.replaceChildren();
+      const pts = state.history.map((h) => h[key]).filter((v) => v != null);
+      if (pts.length < 2) continue;
+      const W = 200, H = 32, lo = Math.min(...pts) - 1, hi = Math.max(...pts) + 1;
+      const x = (i) => i / (pts.length - 1) * W, y = (v) => H - 3 - (v - lo) / (hi - lo) * (H - 6);
+      const ns = 'http://www.w3.org/2000/svg'; const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio', 'none');
+      const path = document.createElementNS(ns, 'path'); path.setAttribute('d', pts.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ')); path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'var(--dem)'); path.setAttribute('stroke-width', '2'); path.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(path);
+      const c = document.createElementNS(ns, 'circle'); c.setAttribute('cx', x(pts.length - 1)); c.setAttribute('cy', y(pts[pts.length - 1])); c.setAttribute('r', '3'); c.setAttribute('fill', 'var(--dem)'); svg.appendChild(c);
+      svg.appendChild(Object.assign(document.createElementNS(ns, 'title'), { textContent: pts.length + ' refreshes · low ' + Math.min(...pts) + '% · high ' + Math.max(...pts) + '%' }));
+      box.appendChild(svg);
+    }
+  }
+  function commitSnapshot() {
+    const snap = snapshot();
+    state.lastSnap = snap; // becomes the comparison point at the start of the next refresh
+    saveJSON('mwr.last', snap);
+    state.history.push({ at: snap.at, senate: snap.control.senate != null ? pct(snap.control.senate) : null, house: snap.control.house != null ? pct(snap.control.house) : null });
+    if (state.history.length > 300) state.history = state.history.slice(-300);
+    saveJSON('mwr.history', state.history);
+  }
+
   // ---------- status + scheduling ----------
   function setStatus(name, cls, note) { state.status[name] = { cls, note }; renderChips(); }
   function renderChips() {
@@ -914,6 +1026,7 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
     if (state.running) return; state.running = true;
     const btn = $('#refreshBtn'); btn.disabled = true; btn.textContent = 'Refreshing…';
     $('#liveDot').classList.add('on');
+    if (state.lastSnap) state.prev = state.lastSnap;
     renderCountdown();
     await Promise.all([
       guarded('Markets', async () => { try { await loadMarkets(); } finally { renderControl(); renderMap(); renderStrip(); renderRaces(); renderResults(); renderHouse(); } }),
@@ -921,6 +1034,7 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
       runFeeds(),
     ]);
     state.lastRun = Date.now(); state.nextRun = state.lastRun + REFRESH_MS;
+    renderChanges(); renderRaces(); commitSnapshot();
     btn.disabled = false; btn.textContent = 'Refresh now';
     state.running = false;
     try { localStorage.setItem('mwr.last', String(state.lastRun)); } catch (e) {}
