@@ -133,6 +133,27 @@ h2 .sub { font-family: var(--font-body); font-weight: 400; text-transform: none;
 @media (prefers-reduced-motion: no-preference) { .skel { animation: sh 1.4s infinite; } }
 @keyframes sh { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
+/* analysis view */
+.tag-ana { font-family: var(--font-mono); font-size: .68rem; padding: .15rem .5rem; border-radius: 3px; letter-spacing: .08em; background: var(--ind); color: #fff; }
+.swarm svg, .scatter svg { width: 100%; height: auto; display: block; }
+.swarm text, .scatter text { font-family: var(--font-mono); font-size: 10px; fill: var(--muted); }
+.swarm .lab, .scatter .lab { fill: var(--fg); font-size: 9.5px; }
+.dot { cursor: pointer; stroke: var(--panel); stroke-width: 1.5; }
+.dot.new { stroke: var(--fg); stroke-width: 2; }
+.dot.pending { opacity: .35; }
+.dot:hover, .dot.hl { stroke: var(--toss); stroke-width: 3; }
+.ana-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.ana-table th.sortable:hover { color: var(--fg); }
+.ana-table th.sortable[aria-sort="ascending"]::after { content: " ▲"; } .ana-table th.sortable[aria-sort="descending"]::after { content: " ▼"; }
+.ana-table td.why { font-size: .75rem; color: var(--muted); min-width: 16rem; }
+.ana-table .bar { display: inline-block; height: .5rem; width: 6rem; background: var(--panel-2); border-radius: 2px; overflow: hidden; vertical-align: middle; margin-right: .4rem; position: relative; }
+.ana-table .bar i { display: block; height: 100%; }
+.ana-table .bar.scale::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--fg); opacity: .4; }
+.ana-table tr.pending td { opacity: .5; }
+.ana-table .newtag { font-family: var(--font-mono); font-size: .62rem; border: 1px solid var(--fg); border-radius: 3px; padding: 0 .3rem; margin-left: .3rem; vertical-align: middle; }
+.wing { font-family: var(--font-mono); font-size: .7rem; padding: .05rem .4rem; border-radius: 999px; color: #fff; white-space: nowrap; }
+#anaFilters button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: .15rem .6rem; font-size: .75rem; cursor: pointer; }
+#anaFilters button.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 /* changes layer */
 .tag-live { font-family: var(--font-mono); font-size: .68rem; padding: .15rem .5rem; border-radius: 3px; letter-spacing: .08em; background: var(--bad); color: #fff; }
 .changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: .8rem; }
@@ -249,7 +270,7 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
 <div class="bar"><div class="bar-in">
   <div class="brand"><span class="live" id="liveDot"></span>Midterms War Room</div>
   <div class="countdown" id="countdown">loading…</div>
-  <div class="tabs" role="tablist"><button type="button" class="tab on" data-view="live" role="tab">Live</button><button type="button" class="tab" data-view="proj" role="tab">Projections</button></div>
+  <div class="tabs" role="tablist"><button type="button" class="tab on" data-view="live" role="tab">Live</button><button type="button" class="tab" data-view="proj" role="tab">Projections</button><button type="button" class="tab" data-view="ana" role="tab">Analysis</button></div>
   <div class="spacer"></div>
   <div class="chips" id="chips"></div>
   <label class="countdown" for="interval">every <select id="interval" style="font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:3px"><option value="2">2 min</option><option value="5" selected>5 min</option><option value="10">10 min</option></select></label>
@@ -443,7 +464,52 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
     <div class="panel tile"><div class="k">Cost of living</div><div class="v"><span>−46</span></div><div class="sub">25% approve / 71% disapprove of Trump's handling of prices — the issue voters rank first.</div></div>
   </div>
 
-  <p class="foot">Sources for this tab: <a href="https://www.poliwave.com/us/fed/projection" target="_blank" rel="noopener">Poliwave</a> · <a href="https://votes.decisiondeskhq.com/forecast/2026" target="_blank" rel="noopener">Decision Desk HQ</a> · <a href="https://centerforpolitics.org/crystalball/2026finalratings/" target="_blank" rel="noopener">Sabato's Crystal Ball final ratings</a> · <a href="https://news.kalshi.com/p/final-2026-midterm-odds" target="_blank" rel="noopener">Kalshi final odds</a> · <a href="https://www.newsweek.com/nate-silver-says-gop-could-be-in-for-long-night-as-final-polls-drop-12648643" target="_blank" rel="noopener">Silver Bulletin / RacetotheWH via Newsweek</a> · <a href="https://www.forbes.com/sites/saradorn/2026/11/02/final-2026-midterm-polls-democrats-lead-key-senate-races-in-last-new-york-times-poll/" target="_blank" rel="noopener">Final polls via Forbes</a>. Compiled 3 Nov 2026, 07:00 Brussels.</p>
+  <p class="foot" id="projFoot">Sources for this tab: <a href="https://www.poliwave.com/us/fed/projection" target="_blank" rel="noopener">Poliwave</a> · <a href="https://votes.decisiondeskhq.com/forecast/2026" target="_blank" rel="noopener">Decision Desk HQ</a> · <a href="https://centerforpolitics.org/crystalball/2026finalratings/" target="_blank" rel="noopener">Sabato's Crystal Ball final ratings</a> · <a href="https://news.kalshi.com/p/final-2026-midterm-odds" target="_blank" rel="noopener">Kalshi final odds</a> · <a href="https://www.newsweek.com/nate-silver-says-gop-could-be-in-for-long-night-as-final-polls-drop-12648643" target="_blank" rel="noopener">Silver Bulletin / RacetotheWH via Newsweek</a> · <a href="https://www.forbes.com/sites/saradorn/2026/11/02/final-2026-midterm-polls-democrats-lead-key-senate-races-in-last-new-york-times-poll/" target="_blank" rel="noopener">Final polls via Forbes</a>. Compiled 3 Nov 2026, 07:00 Brussels.</p>
+</div>
+
+<div class="wrap" id="view-ana" hidden>
+  <div class="pj-head">
+    <div><span class="tag-ana">Analysis</span></div>
+    <h1>The Democratic Senate caucus, mapped</h1>
+    <p>The 54 senators who will caucus with the Democrats from January 2027 (52 Democrats plus independents Sanders and King), placed on a left–right scale <em>within the party</em>, with my estimate of the chance each one launches a 2028 presidential campaign. Alaska and Mississippi are still counting; Peltola and Colom are shown faded until called. Compiled 7 November 2026.</p>
+  </div>
+
+  <div class="tiles" id="anaTiles"></div>
+
+  <h2><span class="tag-ana">Analysis</span> Where each senator sits <span class="sub">0 = the caucus's left edge (Sanders), 100 = a Manchin-style centrist. Dot size = chance of a 2028 run. Ring = new in 2027. Hover or tap a dot.</span></h2>
+  <div class="panel">
+    <div class="legend" id="anaLegend"></div>
+    <div class="swarm" id="swarm"></div>
+  </div>
+
+  <h2><span class="tag-ana">Analysis</span> Ideology against presidential ambition <span class="sub">Who is positioned where, and who is actually moving toward 2028. Names shown from 5% upward.</span></h2>
+  <div class="grid2">
+    <div class="panel"><div class="scatter" id="scatter"></div></div>
+    <div class="panel prose">
+      <h3 class="ph">What the map says</h3>
+      <ul id="anaReading"></ul>
+    </div>
+  </div>
+
+  <h2><span class="tag-ana">Analysis</span> All 54, sortable <span class="sub">Click a column header to sort; use the chips to filter.</span></h2>
+  <div class="panel">
+    <div class="scope" id="anaFilters" style="margin-bottom:.6rem;display:flex;gap:.4rem;flex-wrap:wrap;font-size:.78rem"></div>
+    <div style="overflow-x:auto">
+      <table class="pj-table ana-table" id="anaTable"><thead><tr>
+        <th data-k="name" class="sortable">Senator</th><th data-k="state" class="sortable">State</th><th data-k="since" class="sortable n">Since</th><th data-k="score" class="sortable n">Left–right</th><th data-k="tier" class="sortable">Wing</th><th data-k="p28" class="sortable n">2028 run</th><th>Why</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="panel prose" style="margin-top:.8rem">
+    <h3 class="ph">Method and caveats</h3>
+    <ul>
+      <li><b>Left–right score</b>: anchored on roll-call ideology measures (DW-NOMINATE first dimension and GovTrack's ideology score for the 118th–119th Congresses), then rescaled so the scale runs inside the Democratic caucus only. Newcomers have no voting record yet; their positions come from campaign platforms, primary positioning and endorsements, and carry a wider margin of error. Treat differences of fewer than ~8 points as noise.</li>
+      <li><b>2028 run probability</b>: my judgment, as of 7 November 2026, of the chance the senator formally launches a presidential campaign (files or announces) before the first primaries. It is not a chance of winning. Inputs: public statements, 2026 travel and fundraising for other candidates, age in 2028, whether their own seat is up in 2028, and prediction-market attention where it exists (Ossoff trades at roughly 17% on Kalshi despite saying he has "zero interest"). Probabilities are independent, so they do not sum to 100.</li>
+      <li><b>One dimension hides a lot.</b> Fetterman votes with the centre on immigration and Israel but to the left on labour; Brown and Talarico are economic populists who read as moderate culturally. The scale compresses that.</li>
+      <li>Sources: Punchbowl News (20 Oct) on 2026 travel by Booker, Gallego, Kelly, Murphy, Slotkin and Warnock; Reuters (5 Nov) on the open 2028 field; Newsweek/RealClearPolling (Nov) for market and poll figures; NBC/CBS/AP for the Senate results; Colorado Sun and CPR on Bennet's lost governor primary.</li>
+    </ul>
+  </div>
 </div>
 
 <script>
@@ -1167,15 +1233,206 @@ td.n, th.n { text-align: right; font-family: var(--font-mono); font-variant-nume
   }
   renderProjections();
 
+  // ---------- analysis: Democratic caucus 2027 ----------
+  // [name, state, since, score (0 left … 100 centrist, within caucus), p28 (% chance of launching a 2028 run), new in 2027?, why, pending?]
+  const SEN = [
+    ['Bernie Sanders (I)', 'VT', 2007, 2, 1, false, 'Caucus anchor on the left; 87 in 2028. Kingmaker, not candidate.'],
+    ['Elizabeth Warren', 'MA', 2013, 7, 4, false, 'Ran 2020; 79 in 2028. Says she is not running; shapes the economic agenda instead.'],
+    ['Ed Markey', 'MA', 2013, 9, 1, false, 'Re-elected at 80; Green New Deal co-author. No national ambitions.'],
+    ['Abdul El-Sayed', 'MI', 2027, 11, 4, true, 'Highest-profile progressive win of 2026; first Muslim senator. A 2032 name, not 2028.'],
+    ['Jeff Merkley', 'OR', 2009, 13, 2, false, 'Explored 2020, declined. Filibuster-reform voice.'],
+    ['Mazie Hirono', 'HI', 2013, 15, 0, false, 'Reliable progressive vote; no national moves.'],
+    ['Peggy Flanagan', 'MN', 2027, 18, 2, true, 'Walz\'s lieutenant governor; progressive, first Native American woman in the Senate.'],
+    ['Cory Booker', 'NJ', 2013, 20, 40, false, 'Ran 2020; crisscrossed 8+ states in 2026 and backed Cooper; 25-hour floor speech made him a movement figure. Clearly building.'],
+    ['Alex Padilla', 'CA', 2021, 21, 5, false, 'Passed on the California governor\'s race; immigration profile after the 2025 Noem incident. Possible, not probable.'],
+    ['Chris Van Hollen', 'MD', 2017, 22, 6, false, 'El Salvador trip and joint fundraisers with Ossoff, Brown, Talarico raised his profile; 69 in 2028.'],
+    ['Ron Wyden', 'OR', 1996, 23, 0, false, 'Finance chair-in-waiting; 79. No.'],
+    ['Troy Jackson', 'ME', 2027, 24, 2, true, 'Logger and former state Senate president; labour-left populist who unseated Collins.'],
+    ['Peter Welch', 'VT', 2023, 25, 0, false, 'Vermont\'s quieter senator; 81 in 2028.'],
+    ['Tammy Baldwin', 'WI', 2013, 26, 4, false, 'Won a Trump state twice; sometimes floated, never moves.'],
+    ['Richard Blumenthal', 'CT', 2011, 27, 0, false, 'Oversight-focused; 82 in 2028.'],
+    ['Juliana Stratton', 'IL', 2027, 28, 2, true, 'Pritzker\'s lieutenant governor; progressive-leaning, won the primary over Krishnamoorthi.'],
+    ['Brian Schatz', 'HI', 2013, 29, 2, false, 'Rising in leadership (whip track); national run unlikely.'],
+    ['Chris Murphy', 'CT', 2013, 31, 35, false, 'Town halls in seven swing states, $2.5M to candidates, a defined "fight" message. One of the three or four most obvious Senate candidates.'],
+    ['Kirsten Gillibrand', 'NY', 2009, 32, 3, false, 'Ran 2020; DSCC chair who just delivered a majority. Leadership, not another run.'],
+    ['Sheldon Whitehouse', 'RI', 2007, 33, 1, false, 'Courts and climate; no.'],
+    ['Adam Schiff', 'CA', 2025, 34, 6, false, 'National name from impeachment; Trump\'s favourite target. Could be tempted; freshman timing is awkward.'],
+    ['Tammy Duckworth', 'IL', 2017, 35, 4, false, 'VP-shortlisted in 2020; occasionally mentioned.'],
+    ['Chuck Schumer', 'NY', 1999, 36, 0, false, 'Majority leader again; 77. No.'],
+    ['Angela Alsobrooks', 'MD', 2025, 36, 2, false, 'Freshman; building a Maryland base first.'],
+    ['Patty Murray', 'WA', 1993, 37, 0, false, 'Appropriations; 77. No.'],
+    ['Andy Kim', 'NJ', 2025, 38, 6, false, 'Anti-machine story, young, articulate; more likely 2032.'],
+    ['Amy Klobuchar', 'MN', 2007, 39, 15, false, 'Ran 2020, finished strong in NH; eyes leadership but has not closed the door.'],
+    ['Jack Reed', 'RI', 1997, 40, 0, false, 'Armed Services; 78. No.'],
+    ['Lisa Blunt Rochester', 'DE', 2025, 40, 1, false, 'Freshman; no signals.'],
+    ['Sherrod Brown', 'OH', 2027, 41, 6, true, 'Back after two years out; the party\'s original economic populist. 75 in 2028 and his seat is up again in 2028, which cuts both ways.'],
+    ['Martin Heinrich', 'NM', 2013, 42, 3, false, 'Energy and public lands; low profile nationally.'],
+    ['Ben Ray Luján', 'NM', 2021, 43, 1, false, 'Just re-elected; no.'],
+    ['James Talarico', 'TX', 2027, 43, 12, true, 'First Texas Democrat in the Senate since 1988; seminary student, viral communicator. Enormous buzz, but a freshman from a state that just elected him; more plausible as VP pick.'],
+    ['Maria Cantwell', 'WA', 2001, 44, 0, false, 'Commerce; no.'],
+    ['Tim Kaine', 'VA', 2013, 45, 1, false, 'VP nominee 2016; done with national runs.'],
+    ['Raphael Warnock', 'GA', 2021, 46, 20, false, 'Southern swing through SC, MS, NC plus NH and NV; the Obama-coalition candidate if he goes. Says he is focused on the Senate.'],
+    ['Jon Ossoff', 'GA', 2021, 48, 15, false, 'Won 59–41 in a Trump state; markets price him at ~17%, he says "zero interest". The gap between those two numbers is the story.'],
+    ['Josh Turek', 'IA', 2027, 48, 2, true, 'Paralympian, state legislator; flipped Iowa on a disability-rights and affordability message.'],
+    ['Michael Bennet', 'CO', 2009, 50, 2, false, 'Ran 2020; lost the 2026 governor primary to Weiser, so he stays in the Senate. Not running again.'],
+    ['Annie Andrews', 'SC', 2027, 50, 1, true, 'Paediatrician who won the special for Lindsey Graham\'s seat; faces voters again in 2028.'],
+    ['Chris Coons', 'DE', 2010, 51, 2, false, 'Biden\'s closest Senate ally; institutionalist.'],
+    ['Catherine Cortez Masto', 'NV', 2017, 52, 2, false, 'Passed on VP 2020; no signals.'],
+    ['Adam Hamilton', 'KS', 2027, 53, 1, true, 'Unseated Marshall in Kansas; centrist by necessity.'],
+    ['Maggie Hassan', 'NH', 2017, 54, 2, false, 'Former governor; no national moves.'],
+    ['Ruben Gallego', 'AZ', 2025, 55, 40, false, 'Travelled to NV, MT, SC, TX, FL; openly flirting; the working-class-Latino lane is his alone. The most likely Senate candidate.'],
+    ['Jacky Rosen', 'NV', 2019, 56, 1, false, 'Low profile; no.'],
+    ['Chris Pappas', 'NH', 2027, 56, 1, true, 'Moderate House veteran; held Shaheen\'s seat.'],
+    ['Mark Kelly', 'AZ', 2020, 57, 35, false, 'Campaigned in 16 states, raised $14M for others; VP-shortlisted 2024; astronaut biography. Deciding between a run and being everyone\'s VP.'],
+    ['Roy Cooper', 'NC', 2027, 58, 10, true, 'Two-term governor who flipped the seat; 71 in 2028. Has said no, but the résumé is presidential.'],
+    ['Mark Warner', 'VA', 2009, 60, 2, false, 'Intelligence; explored 2008. No.'],
+    ['Elissa Slotkin', 'MI', 2025, 61, 25, false, 'Campaigned for 37 candidates across the Midwest; "war plan" speeches; CIA/Pentagon credentials. Positioning for a national-security moderate lane.'],
+    ['John Hickenlooper', 'CO', 2021, 62, 1, false, 'Ran 2020; 76 in 2028. No.'],
+    ['Angus King (I)', 'ME', 2013, 64, 0, false, 'Independent; 84 in 2028. No.'],
+    ['John Fetterman', 'PA', 2023, 76, 3, false, 'Caucus\'s right flank on immigration and Israel; occasionally floated as a crossover figure, but no organisation.'],
+    ['Mary Peltola', 'AK', 2027, 70, 3, true, 'Pro-gun, pro-oil moderate; race still in ranked-choice tabulation.', true],
+    ['Scott Colom', 'MS', 2027, 50, 1, true, 'District attorney; leading Hyde-Smith by ~1,700 votes, not yet called.', true],
+  ];
+  const TIER = (s) => s <= 20 ? 'Progressive' : s <= 40 ? 'Liberal' : s <= 60 ? 'Centre-left' : 'Moderate';
+  const TIER_COLOR = { Progressive: '#5e3fa6', Liberal: 'var(--dem)', 'Centre-left': '#2f8f8f', Moderate: '#8a7a3a' };
+  const shortName = (n) => { const m = n.match(/(Van Hollen|Cortez Masto|Blunt Rochester|El-Sayed|Luján)/); return m ? m[1] : n.replace(/ \(I\)/, '').split(' ').slice(-1)[0]; };
+  const SENS = SEN.map(([name, state, since, score, p28, isNew, why, pending]) => ({ name, state, since, score, p28, isNew, why, pending: !!pending, tier: TIER(score), short: shortName(name) }));
+  const SEATED = SENS.filter((s) => !s.pending);
+
+  function renderAnalysis() {
+    // tiles
+    const tiles = $('#anaTiles'); tiles.replaceChildren();
+    const counts = {}; for (const s of SEATED) counts[s.tier] = (counts[s.tier] || 0) + 1;
+    const med = (arr) => { const a = [...arr].sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
+    const newMed = med(SEATED.filter((s) => s.isNew).map((s) => s.score)), oldMed = med(SEATED.filter((s) => !s.isNew).map((s) => s.score));
+    const watch = SEATED.filter((s) => s.p28 >= 10).sort((a, b) => b.p28 - a.p28);
+    const tile = (k, v, sub, small) => { const d = el('div', 'panel tile'); d.appendChild(el('div', 'k', k)); const vv = el('div', 'v'); if (small) vv.style.cssText = 'font-size:1.15rem;line-height:1.3;font-weight:600;display:block'; vv.appendChild(el('span', null, v)); d.appendChild(vv); d.appendChild(el('div', 'sub', sub)); return d; };
+    tiles.appendChild(tile('Caucus from January', String(SEATED.length), SEATED.filter((s) => s.isNew).length + ' new senators · ' + (SENS.length - SEATED.length) + ' seats still counting'));
+    tiles.appendChild(tile('Shape of the caucus', Object.entries(counts).map(([k, v]) => v + ' ' + k.toLowerCase()).join(' · '), 'median score ' + med(SEATED.map((s) => s.score)) + ' of 100 — the centre of gravity is mainstream-liberal, not the left', true));
+    tiles.appendChild(tile('New vs continuing', newMed + ' vs ' + oldMed, 'median left–right score of the ' + SEATED.filter((s) => s.isNew).length + ' newcomers vs the rest: the class of 2026 lands slightly ' + (newMed > oldMed ? 'right' : 'left') + ' of the caucus'));
+    tiles.appendChild(tile('2028 watch list', watch.map((s) => s.short).join(', '), watch.length + ' senators at 10% or more; Booker, Gallego, Kelly and Murphy lead', true));
+
+    // legend
+    const lg = $('#anaLegend'); lg.replaceChildren();
+    for (const [t, c] of Object.entries(TIER_COLOR)) { const s = el('span'); const i = el('i'); i.style.background = c; s.appendChild(i); s.append(t); lg.appendChild(s); }
+    const s2 = el('span'); const i2 = el('i'); i2.style.cssText = 'background:transparent;border:2px solid var(--fg)'; s2.appendChild(i2); s2.append('New in 2027'); lg.appendChild(s2);
+
+    renderSwarm(); renderScatter(); renderAnaTable(); renderReading();
+  }
+  const ns = 'http://www.w3.org/2000/svg';
+  const mkEl = (t, a) => { const e = document.createElementNS(ns, t); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); return e; };
+  let anaTip;
+  const showTip = (card, ev, s) => {
+    if (!anaTip || anaTip.parentNode !== card) { anaTip = document.createElement('div'); anaTip.className = 'tip'; card.appendChild(anaTip); }
+    anaTip.hidden = false; anaTip.replaceChildren();
+    anaTip.appendChild(el('div', 'k', s.name + ' · ' + s.state + ' · since ' + s.since + (s.pending ? ' (not yet called)' : '')));
+    anaTip.appendChild(el('div', null, 'Left–right ' + s.score + '/100 · ' + s.tier));
+    anaTip.appendChild(el('div', null, '2028 run: ' + s.p28 + '%'));
+    const w = el('div', null, s.why); w.style.cssText = 'white-space:normal;max-width:20rem;color:var(--muted);margin-top:.2rem'; anaTip.appendChild(w);
+    const r = card.getBoundingClientRect(); let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12; if (x + anaTip.offsetWidth > r.width - 8) x = Math.max(4, ev.clientX - r.left - anaTip.offsetWidth - 12); anaTip.style.left = x + 'px'; anaTip.style.top = y + 'px';
+  };
+  const hideTip = () => { if (anaTip) anaTip.hidden = true; };
+  const rOf = (p) => 4 + Math.sqrt(p) * 1.6;
+
+  function renderSwarm() {
+    const box = $('#swarm'); box.replaceChildren();
+    const W = 900, m = { l: 30, r: 30, t: 30 }, rowGap = 1;
+    const x = (v) => m.l + v / 100 * (W - m.l - m.r);
+    // beeswarm: place dots left to right, push up into the first free lane
+    const placed = [];
+    const items = [...SENS].sort((a, b) => a.score - b.score).map((s) => {
+      const r = rOf(s.p28); let lane = 0;
+      while (placed.some((p) => p.lane === lane && Math.abs(p.cx - x(s.score)) < p.r + r + rowGap)) lane++;
+      const o = { s, cx: x(s.score), r, lane }; placed.push(o); return o;
+    });
+    const maxLane = Math.max(...items.map((o) => o.lane)); const laneH = 20;
+    const labelRoom = 40;
+    const base = m.t + labelRoom + (maxLane + 1) * laneH + 10, H = base + 36;
+    const svg = mkEl('svg', { viewBox: `0 0 ${W} ${H}` });
+    for (const [v, lab] of [[0, 'Left edge'], [20, '20'], [40, '40'], [60, '60'], [80, '80'], [100, 'Centrist']]) { svg.appendChild(mkEl('line', { x1: x(v), x2: x(v), y1: m.t - 10, y2: base + 4, stroke: 'var(--line)' })); const t = mkEl('text', { x: x(v), y: base + 18, 'text-anchor': 'middle' }); t.textContent = lab; svg.appendChild(t); }
+    for (const [a, b, t] of [[0, 20, 'Progressive'], [20, 40, 'Liberal'], [40, 60, 'Centre-left'], [60, 100, 'Moderate']]) { const tx = mkEl('text', { x: (x(a) + x(b)) / 2, y: m.t - 14, 'text-anchor': 'middle', style: 'fill:' + TIER_COLOR[t] + ';font-weight:600' }); tx.textContent = t; svg.appendChild(tx); }
+    const card = box.closest('.panel');
+    for (const o of items) o.cy = base - 10 - o.lane * laneH;
+    const labels = [];
+    for (const o of items) {
+      const c = mkEl('circle', { cx: o.cx, cy: o.cy, r: o.r, fill: TIER_COLOR[o.s.tier], class: 'dot' + (o.s.isNew ? ' new' : '') + (o.s.pending ? ' pending' : '') });
+      c.addEventListener('mousemove', (ev) => showTip(card, ev, o.s)); c.addEventListener('mouseleave', hideTip); c.addEventListener('click', (ev) => showTip(card, ev, o.s));
+      svg.appendChild(c);
+      if (o.s.p28 >= 10 || o.s.score <= 7 || o.s.score >= 70) labels.push(o);
+    }
+    // labels sit above the whole stack near that x, with a thin leader line; stacked upward when they would collide
+    const placedLab = [];
+    for (const o of labels.sort((a, b) => a.cx - b.cx)) {
+      const top = Math.min(...items.filter((p) => Math.abs(p.cx - o.cx) < 14).map((p) => p.cy - p.r));
+      let ly = top - 8; while (placedLab.some(([px, py]) => Math.abs(px - o.cx) < 66 && Math.abs(py - ly) < 11)) ly -= 11;
+      placedLab.push([o.cx, ly]);
+      svg.appendChild(mkEl('line', { x1: o.cx, x2: o.cx, y1: ly + 2, y2: o.cy - o.r, stroke: 'var(--line)', 'stroke-width': 1 }));
+      const t = mkEl('text', { x: o.cx, y: ly, 'text-anchor': 'middle', class: 'lab' }); t.textContent = o.s.short; svg.appendChild(t);
+    }
+    box.appendChild(svg);
+  }
+  function renderScatter() {
+    const box = $('#scatter'); box.replaceChildren();
+    const W = 600, H = 360, m = { l: 40, r: 16, t: 14, b: 34 };
+    const x = (v) => m.l + v / 100 * (W - m.l - m.r), y = (p) => m.t + (1 - Math.sqrt(p / 45)) * (H - m.t - m.b);
+    const svg = mkEl('svg', { viewBox: `0 0 ${W} ${H}` });
+    for (const p of [0, 5, 10, 20, 30, 40]) { svg.appendChild(mkEl('line', { x1: m.l, x2: W - m.r, y1: y(p), y2: y(p), stroke: 'var(--line)' })); const t = mkEl('text', { x: m.l - 6, y: y(p), dy: '.35em', 'text-anchor': 'end' }); t.textContent = p + '%'; svg.appendChild(t); }
+    for (const v of [0, 25, 50, 75, 100]) { const t = mkEl('text', { x: x(v), y: H - 10, 'text-anchor': 'middle' }); t.textContent = v === 0 ? 'left' : v === 100 ? 'centrist' : v; svg.appendChild(t); }
+    const yl = mkEl('text', { x: m.l - 6, y: m.t - 4, 'text-anchor': 'end' }); yl.textContent = '2028 run'; svg.appendChild(yl);
+    const card = box.closest('.panel');
+    const seen = [];
+    for (const s of [...SENS].sort((a, b) => b.p28 - a.p28)) {
+      const cx = x(s.score), cy = y(s.p28);
+      const c = mkEl('circle', { cx, cy, r: s.p28 >= 5 ? 6 : 3.5, fill: TIER_COLOR[s.tier], class: 'dot' + (s.isNew ? ' new' : '') + (s.pending ? ' pending' : '') });
+      c.addEventListener('mousemove', (ev) => showTip(card, ev, s)); c.addEventListener('mouseleave', hideTip); c.addEventListener('click', (ev) => showTip(card, ev, s));
+      svg.appendChild(c);
+      if (s.p28 >= 5) { let ly = cy - 9; while (seen.some(([sx, sy]) => Math.abs(sx - cx) < 46 && Math.abs(sy - ly) < 11)) ly -= 11; seen.push([cx, ly]); const t = mkEl('text', { x: cx, y: ly, 'text-anchor': 'middle', class: 'lab' }); t.textContent = s.short; svg.appendChild(t); }
+    }
+    box.appendChild(svg);
+  }
+  function renderReading() {
+    const ul = $('#anaReading'); ul.replaceChildren();
+    const lines = [
+      'The caucus is a bell curve centred around 40–55, not a left-wing bloc: only 8 of 54 sit in the progressive band, and 4 of those (Sanders, Warren, Markey, Hirono) will be over 75 in 2028.',
+      'The class of 2026 was recruited to win red and purple states, so it lands in the centre-left (Cooper, Pappas, Hamilton, Turek, Andrews, Talarico) with two progressive exceptions elected in safe or trending-blue states (El-Sayed, Flanagan).',
+      'Presidential ambition clusters in the centre-left and moderate bands: Gallego, Kelly, Slotkin, Warnock, Ossoff. The left\'s energy sits outside the Senate (Ocasio-Cortez, Khanna) — Booker and Murphy are the only liberal-wing senators with real 2028 organisation.',
+      'Three senators carry a pull their own words deny: Ossoff ("zero interest", markets at 17%), Cooper (governor résumé, says no) and Talarico (freshman, but the party\'s best new communicator). Any of them could be dragged in by a weak field.',
+      'If two or more senators run, expect the lane fight to be Gallego vs Kelly (same state, same moderate lane) and Booker vs Murphy (the liberal-fighter lane); only one of each pair realistically survives New Hampshire.',
+    ];
+    for (const l of lines) ul.appendChild(el('li', null, l));
+  }
+  let anaSort = { k: 'score', dir: 1 }, anaFilter = 'all';
+  function renderAnaTable() {
+    const fl = $('#anaFilters'); fl.replaceChildren();
+    for (const [k, lab] of [['all', 'All'], ['new', 'New in 2027'], ['Progressive', 'Progressive'], ['Liberal', 'Liberal'], ['Centre-left', 'Centre-left'], ['Moderate', 'Moderate'], ['watch', '2028 watch (≥10%)']]) {
+      const b = el('button', anaFilter === k ? 'on' : '', lab); b.type = 'button'; b.addEventListener('click', () => { anaFilter = k; renderAnaTable(); }); fl.appendChild(b);
+    }
+    const tb = $('#anaTable tbody'); tb.replaceChildren();
+    let rows = SENS.filter((s) => anaFilter === 'all' || (anaFilter === 'new' ? s.isNew : anaFilter === 'watch' ? s.p28 >= 10 : s.tier === anaFilter));
+    rows.sort((a, b) => { const va = a[anaSort.k], vb = b[anaSort.k]; return (typeof va === 'string' ? va.localeCompare(vb) : va - vb) * anaSort.dir; });
+    for (const th of document.querySelectorAll('#anaTable th.sortable')) { th.setAttribute('aria-sort', th.dataset.k === anaSort.k ? (anaSort.dir > 0 ? 'ascending' : 'descending') : 'none'); th.onclick = () => { anaSort = { k: th.dataset.k, dir: anaSort.k === th.dataset.k ? -anaSort.dir : (th.dataset.k === 'p28' ? -1 : 1) }; renderAnaTable(); }; }
+    for (const s of rows) {
+      const tr = el('tr', s.pending ? 'pending' : '');
+      const nm = el('td', null, s.name); if (s.isNew) nm.appendChild(el('span', 'newtag', s.pending ? 'COUNTING' : 'NEW')); tr.appendChild(nm);
+      tr.appendChild(el('td', null, s.state)); tr.appendChild(el('td', 'n', String(s.since)));
+      const sc = el('td', 'n'); const bar = el('span', 'bar scale'); const i = el('i'); i.style.width = s.score + '%'; i.style.background = TIER_COLOR[s.tier]; bar.appendChild(i); sc.appendChild(bar); sc.append(String(s.score)); tr.appendChild(sc);
+      const tw = el('td'); const w = el('span', 'wing', s.tier); w.style.background = TIER_COLOR[s.tier]; tw.appendChild(w); tr.appendChild(tw);
+      const pc = el('td', 'n'); const b2 = el('span', 'bar'); const i2 = el('i'); i2.style.width = Math.min(100, s.p28 * 2.5) + '%'; i2.style.background = s.p28 >= 10 ? 'var(--toss)' : 'var(--muted)'; b2.appendChild(i2); pc.appendChild(b2); pc.append(s.p28 + '%'); if (s.p28 >= 20) pc.style.fontWeight = '600'; tr.appendChild(pc);
+      tr.appendChild(el('td', 'why', s.why));
+      tb.appendChild(tr);
+    }
+  }
+  renderAnalysis();
+
   // ---------- tabs ----------
   function showView(v) {
-    $('#view-live').hidden = v !== 'live'; $('#view-proj').hidden = v !== 'proj';
+    $('#view-live').hidden = v !== 'live'; $('#view-proj').hidden = v !== 'proj'; $('#view-ana').hidden = v !== 'ana';
     for (const b of document.querySelectorAll('.tab')) { b.classList.toggle('on', b.dataset.view === v); b.setAttribute('aria-selected', b.dataset.view === v); }
     try { localStorage.setItem('mwr.view', v); } catch (e) {}
     if (v === 'live') { renderMap(); renderStrip(); }
   }
   for (const b of document.querySelectorAll('.tab')) b.addEventListener('click', () => showView(b.dataset.view));
-  try { const v = localStorage.getItem('mwr.view'); if (v === 'proj') showView('proj'); } catch (e) {}
+  try { const v = localStorage.getItem('mwr.view'); if (v === 'proj' || v === 'ana') showView(v); } catch (e) {}
 
   $('#refreshBtn').addEventListener('click', refreshAll);
   const sel = $('#interval'); sel.value = String(REFRESH_MS / 60000);
